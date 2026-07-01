@@ -69,9 +69,10 @@ These decisions are closed.
 ### 2.4 Deterministic queue behavior
 
 - Real gameplay use must preserve existing sequencing.
-- Player attack cards must still wait until visual impact before `OnPlay` resolves.
-- Buff/support cards must still wait for visual completion before `OnPlay` resolves.
-- Enemy attacks must still wait for impact before damage/effects resolve.
+- Card gameplay remains immediate after validation and cost payment, matching current `CardPlaySystem` behavior. Card visual queue events serialize presentation only; they must not delay `CardBase.OnPlay`, HP/resource/passive mutation, AP spend, tracking, or card movement.
+- Recipe-enabled cards run legacy card animation and modular FX in parallel when a legacy animation exists, then the card presentation queue waits for all required visual signals before moving to the next queued visual.
+- Enemy attacks still resolve damage/effects at the authoritative impact signal. For modular enemy attacks, the modular coordinator publishes that impact signal.
+- Recipe-enabled equipment and medal activations use trigger-queued activation wrappers. When the queued activation resolves, gameplay activation and modular visual start happen in the same queue step, then the trigger queue waits for modular visual completion.
 - Debug playback must not enqueue gameplay rule events.
 
 ### 2.5 Mirroring
@@ -106,6 +107,7 @@ These decisions are closed.
 - `CardPlaySystem` checks `CardBase.Animation`.
   - `"Attack"` enqueues `QueuedStartPlayerAttackAnimation` then `QueuedWaitPlayerImpactEvent`.
   - `"Buff"` enqueues `QueuedStartBuffAnimation(true)` then `QueuedWaitBuffComplete(true)`.
+- Current card gameplay is immediate after validation and cost payment. The queued card animation events do not suspend the `OnPlay` method; `OnPlay`, HP/passive/resource changes, AP spend, tracking, and card movement happen immediately after the visual queue events are enqueued.
 - `PlayerAnimationSystem` listens for:
   - `StartPlayerAttackAnimation`
   - `StartBuffAnimation`
@@ -177,6 +179,9 @@ public enum VisualEffectModule
     SmokeScreen,
     SwordArc,
     CrossSlash,
+    ClawSlash,
+    Bite,
+    RockBlast,
     HammerArc,
     CrossBloom,
     Ring,
@@ -193,6 +198,8 @@ public enum VisualEffectModule
     HitStop
 }
 ```
+
+`ClawSlash`, `Bite`, and `RockBlast` come from the mockup additions. They are general visual primitives and must not force target selection by themselves. Recipes decide target intent through `VisualEffectTargetRole`.
 
 ```csharp
 public enum VisualEffectTimingProfile
@@ -254,7 +261,7 @@ public VisualEffectRecipe WithTiming(VisualEffectTimingProfile timing);
 public VisualEffectRecipe WithModules(params VisualEffectModule[] modules);
 ```
 
-Use immutable copies internally. If this is implemented with mutable setters instead of `init`, all request paths must clone before use.
+Use immutable copies internally. Prefer a private array or `ImmutableArray<VisualEffectModule>` exposed as `IReadOnlyList<VisualEffectModule>`. Normalize duplicate modules away while preserving first occurrence order; use `Intensity` and `ParticleMultiplier` for amplification instead of repeated enum entries. If this is implemented with mutable setters instead of `init`, all request paths must clone before use.
 
 ### 5.3 Timing profile model
 
@@ -311,6 +318,9 @@ public static VisualEffectRecipe DefensiveGuard();
 public static VisualEffectRecipe BloodRitual();
 public static VisualEffectRecipe EnemySlash();
 public static VisualEffectRecipe EnemyHeavyImpact();
+public static VisualEffectRecipe EnemyClawSlash();
+public static VisualEffectRecipe EnemyBite();
+public static VisualEffectRecipe EnemyRockBlast();
 ```
 
 Each method returns a fresh recipe instance.
@@ -327,6 +337,9 @@ Preset defaults:
 | `BloodRitual` | `RitualPulse` | `Self` | `RedVignette`, `Ring`, `SmokeBlobs`, `Rays` |
 | `EnemySlash` | `SnapImpact` | `Player` | `CrossSlash`, `SlashBand`, `HitFlash`, `Shake` |
 | `EnemyHeavyImpact` | `HeavyImpact` | `Player` | `Ring`, `Debris`, `Cracks`, `HitFlash`, `Shockwave`, `Shake`, `HitStop` |
+| `EnemyClawSlash` | `SnapImpact` | `Player` | `ClawSlash`, `HitFlash`, `Debris`, `SlashBand`, `Shake` |
+| `EnemyBite` | `HeavyImpact` | `Player` | `Bite`, `HitFlash`, `RedVignette`, `Shake`, `HitStop` |
+| `EnemyRockBlast` | `HeavyImpact` | `Player` | `RockBlast`, `Ring`, `Debris`, `SmokeBlobs`, `HitFlash`, `Shockwave`, `Shake`, `PunchZoom`, `HitStop` |
 
 ### 5.5 Base object properties
 
@@ -377,10 +390,11 @@ public sealed class VisualEffectRequested
 {
     public Guid RequestId { get; init; } = Guid.NewGuid();
     public VisualEffectRecipe Recipe { get; init; }
-    public Entity Source { get; init; }
-    public Entity Target { get; init; }
+    public Entity? Source { get; init; }
+    public Entity? Target { get; init; }
     public VisualEffectSourceKind SourceKind { get; init; }
     public string SourceId { get; init; } = string.Empty;
+    public string ContextId { get; init; } = string.Empty;
     public string DisplayName { get; init; } = string.Empty;
     public bool IsPreview { get; init; }
 }
@@ -405,9 +419,14 @@ public sealed class VisualEffectCompleted
 Rules:
 
 - `Recipe` must be cloned before being stored by any display/coordinator system.
-- `Source` and `Target` may be null only for debug preview fallback. The coordinator must resolve battle defaults in that case.
+- Factory methods clone recipes before assigning them to requests. The coordinator clones again when creating active effects so it can bake global debug multipliers into the active recipe.
+- `VisualEffectRequested` is immutable after construction.
+- `Source` and `Target` may be null at the event boundary, especially for debug preview requests. Accepted `ActiveVisualEffect` instances require non-null concrete source and target anchors. No fallback screen anchors are allowed.
+- `ContextId` is used by real enemy attack requests only. The coordinator publishes `EnemyAttackImpactNow { ContextId }` at modular impact for accepted non-preview enemy attack requests.
 - Completion events are visual timing events only. They do not imply gameplay success.
 - Preview completion events must not be consumed by gameplay queue waits unless the wait was created for the same request ID.
+- If the coordinator rejects a preview request, it logs quietly and publishes no lifecycle events.
+- If the coordinator rejects a non-preview request that has already been published, it logs loudly and immediately publishes `VisualEffectImpactReached` and `VisualEffectCompleted` for that request ID. If the rejected request is an enemy attack with a non-empty `ContextId`, it also publishes `EnemyAttackImpactNow` for that context. This is an emergency anti-deadlock guard; normal callers should avoid publishing invalid real requests.
 
 ---
 
@@ -419,6 +438,12 @@ Create:
 ECS/Scenes/BattleScene/QueuedStartVisualEffect.cs
 ECS/Scenes/BattleScene/QueuedWaitVisualEffectImpact.cs
 ECS/Scenes/BattleScene/QueuedWaitVisualEffectComplete.cs
+ECS/Scenes/BattleScene/QueuedStartCardVisuals.cs
+ECS/Scenes/BattleScene/QueuedWaitCardVisuals.cs
+ECS/Scenes/BattleScene/QueuedStartEnemyAttackVisuals.cs
+ECS/Scenes/BattleScene/QueuedWaitEnemyAttackVisuals.cs
+ECS/Scenes/BattleScene/QueuedActivateEquipmentWithVisual.cs
+ECS/Scenes/BattleScene/QueuedActivateMedalWithVisual.cs
 ```
 
 ### 7.1 Start wrapper
@@ -450,6 +475,93 @@ ECS/Scenes/BattleScene/QueuedWaitVisualEffectComplete.cs
 
 Do not complete based only on `IsPreview` or source kind.
 
+No modular visual wait has timeout behavior. Waits ignore non-matching request IDs and remain waiting until the matching event is published. This matches current queue style. Existing `EventQueue.Clear()` has no cancellation/dispose hook, so waits unsubscribe on normal completion only; document this as an existing queue limitation rather than extending queue lifecycle in this plan.
+
+### 7.4 Card visual start and wait wrappers
+
+Create a small enum for card compatibility visuals:
+
+```csharp
+public enum CardLegacyVisualKind
+{
+    None,
+    Attack,
+    Buff
+}
+```
+
+`CardPlaySystem` maps `CardBase.Animation` to this enum. Keep string interpretation localized there.
+
+`QueuedStartCardVisuals`:
+
+- Constructor accepts `CardLegacyVisualKind legacyKind`, optional `VisualEffectRequested modularRequest`, and the buff target flag.
+- Publishes the legacy start event and modular request in the same `StartResolving` so they start in parallel.
+- For `Attack`, publishes `StartPlayerAttackAnimation`.
+- For `Buff`, publishes `StartBuffAnimation { TargetIsPlayer = true }`, preserving current behavior.
+- Publishes the modular request if non-null.
+- Completes immediately.
+
+`QueuedWaitCardVisuals`:
+
+- Constructor accepts the same `CardLegacyVisualKind`, optional modular request ID, and buff target flag.
+- If `legacyKind == Attack`, waits for `PlayerAttackImpactNow`.
+- If `legacyKind == Buff`, waits for `BuffAnimationComplete { TargetIsPlayer = true }`.
+- If a modular request ID exists, waits for `VisualEffectCompleted` with that request ID.
+- Completes only after all required signals have occurred, in any order.
+- Cards with a modular recipe but no legacy animation wait only for modular completion.
+
+### 7.5 Enemy visual start and wait wrappers
+
+`QueuedStartEnemyAttackVisuals`:
+
+- Constructor accepts `contextId` and a fully built `VisualEffectRequested`.
+- Publishes `StartEnemyAttackAnimation { ContextId = contextId, SuppressImpactEvent = true, SuppressSfx = true }`.
+- Publishes the modular request in the same `StartResolving`.
+- Completes immediately.
+
+`QueuedWaitEnemyAttackVisuals`:
+
+- Constructor accepts `contextId` and modular request ID.
+- Waits for `VisualEffectImpactReached` matching the modular request ID.
+- Waits for `EnemyAttackVisualComplete` matching the context ID.
+- Completes only after both signals have occurred, in any order.
+
+Extend `StartEnemyAttackAnimation` and add:
+
+```csharp
+public bool SuppressImpactEvent { get; init; }
+public bool SuppressSfx { get; init; }
+```
+
+Add:
+
+```csharp
+public sealed class EnemyAttackVisualComplete
+{
+    public string ContextId { get; init; } = string.Empty;
+}
+```
+
+When `SuppressImpactEvent` is true, `EnemyDisplaySystem` still moves the enemy portrait but does not publish `EnemyAttackImpactNow`. When `SuppressSfx` is true, it also skips the legacy enemy attack SFX. It publishes `EnemyAttackVisualComplete` when the lunge timer finishes.
+
+### 7.6 Equipment and medal activation wrappers
+
+Recipe-enabled equipment and medal activations enqueue trigger events instead of running directly.
+
+`QueuedActivateEquipmentWithVisual`:
+
+- Runs existing equipment activation gameplay inside `StartResolving`.
+- Exact order: `OnActivate`, publish `EquipmentAbilityTriggered`, build/publish `VisualEffectRequested`, then wait for modular completion.
+- If visual request creation fails, log and complete immediately after gameplay activation.
+- Validation happens before enqueue only; the queued action assumes activation remains valid.
+
+`QueuedActivateMedalWithVisual`:
+
+- Runs existing medal activation gameplay inside `StartResolving`.
+- Exact order: publish `MedalTriggered`, call `medal.Activate()`, build/publish `VisualEffectRequested`, then wait for modular completion.
+- If visual request creation fails, log and complete immediately after gameplay activation.
+- Do not add generic medal validation beyond the existing event path that emits `MedalActivateEvent`.
+
 ---
 
 ## 8. Runtime Request Resolution
@@ -465,7 +577,7 @@ This service must be read-only. It may inspect entities and object data but must
 Recommended signatures:
 
 ```csharp
-public static VisualEffectRequested ForCard(
+public static VisualEffectRequested? ForCard(
     EntityManager entityManager,
     Entity cardEntity,
     VisualEffectRecipe recipe,
@@ -473,7 +585,7 @@ public static VisualEffectRequested ForCard(
 ```
 
 ```csharp
-public static VisualEffectRequested ForEquipment(
+public static VisualEffectRequested? ForEquipment(
     EntityManager entityManager,
     Entity equipmentEntity,
     VisualEffectRecipe recipe,
@@ -481,7 +593,7 @@ public static VisualEffectRequested ForEquipment(
 ```
 
 ```csharp
-public static VisualEffectRequested ForMedal(
+public static VisualEffectRequested? ForMedal(
     EntityManager entityManager,
     Entity medalEntity,
     VisualEffectRecipe recipe,
@@ -489,7 +601,7 @@ public static VisualEffectRequested ForMedal(
 ```
 
 ```csharp
-public static VisualEffectRequested ForEnemyAttack(
+public static VisualEffectRequested? ForEnemyAttack(
     EntityManager entityManager,
     Entity enemyEntity,
     EnemyAttackBase attack,
@@ -509,12 +621,21 @@ public static VisualEffectRequested ForDebugPreview(
 
 Target resolution:
 
-- `VisualEffectTargetRole.Enemy`: first active `Enemy`.
+- `VisualEffectTargetRole.Enemy`: prefer the named `"Enemy"` entity when active and it has an `Enemy` component, then fall back to first active `Enemy`.
 - `VisualEffectTargetRole.Player`: first `Player`.
-- `VisualEffectTargetRole.Self`: source entity if available; otherwise player for card/equipment/medal previews and enemy for enemy attack previews.
-- `VisualEffectTargetRole.Opponent`: enemy when source is player-owned; player when source is enemy-owned.
+- `VisualEffectTargetRole.Self`: player actor for card/equipment/medal requests; enemy actor for enemy attack requests.
+- `VisualEffectTargetRole.Opponent`: infer ownership from `VisualEffectSourceKind`. `EnemyAttack` means opponent is player; `Card`, `Equipment`, and `Medal` mean opponent is enemy.
 
-If resolution fails, return a request with null source/target and allow the coordinator to use screen-space defaults for debug preview only. Real gameplay requests with no target should be skipped by caller.
+Source resolution:
+
+- Cards use the card entity as source when it has a valid `Transform`; otherwise use the player actor.
+- Equipment and medals use the player actor as source, not the UI item entity.
+- Enemy attacks use the enemy actor as source.
+- Debug card/equipment/medal previews use player source and recipe target. Debug enemy attack previews use enemy source and player target.
+
+Real gameplay factory methods return `null` if required source or target resolution fails. Callers must not publish a null request or enqueue waits for it.
+
+`ForDebugPreview` attempts the same real battle source/target resolution, but still returns a preview request if entities are missing. The coordinator is the final accept/reject gate. If battle actors are missing, preview playback is a no-op with quiet logging. Do not use fallback screen anchors.
 
 ---
 
@@ -528,52 +649,50 @@ Current behavior:
 
 - If `card.Animation == "Attack"`, enqueue player attack animation and wait impact.
 - Else if `card.Animation == "Buff"`, enqueue buff animation and wait completion.
-- Then call `card.OnPlay`.
+- Then call `card.OnPlay` immediately in the same method. Existing queued visual events serialize presentation, not gameplay mutation.
 
 New behavior:
 
 1. If `card.VisualEffectRecipe != null`:
    - Build a `VisualEffectRequested` through `VisualEffectRequestFactory.ForCard`.
-   - Enqueue `QueuedStartVisualEffect`.
-   - If the card is attack-like, enqueue `QueuedWaitVisualEffectImpact`.
-   - If the card is support/buff-like, enqueue `QueuedWaitVisualEffectComplete`.
-   - Continue to `OnPlay` after the wait.
+   - If request creation succeeds, map `card.Animation` to `CardLegacyVisualKind`.
+   - Enqueue `QueuedStartCardVisuals` so the legacy card visual and modular request start in parallel.
+   - Enqueue `QueuedWaitCardVisuals`.
+   - Continue immediately to `OnPlay`; do not wait inside `CardPlaySystem`.
+   - If request creation fails, skip all queued card visuals for that recipe-enabled card, including legacy attack/buff animation, log, and continue immediately to `OnPlay`.
 2. Else run existing string animation fallback unchanged.
 
 Classification rule for v1:
 
-- If `card.Animation` is `"Attack"`, wait for modular impact.
-- If `card.Animation` is `"Buff"`, wait for modular completion.
-- If `card.Animation` is empty but recipe exists, wait for completion.
+- If `card.Animation` is `"Attack"` and a modular request exists, `QueuedWaitCardVisuals` waits for both `PlayerAttackImpactNow` and modular `VisualEffectCompleted`.
+- If `card.Animation` is `"Buff"` and a modular request exists, `QueuedWaitCardVisuals` waits for both `BuffAnimationComplete { TargetIsPlayer = true }` and modular `VisualEffectCompleted`.
+- If `card.Animation` is empty but a modular request exists, `QueuedWaitCardVisuals` waits for modular completion only.
 
 Do not remove or reinterpret `CardBase.Animation` in v1.
+Do not suppress `ModifyHpEvent`-driven legacy splash effects for recipe-enabled attack cards. Modular FX and existing splash effects may both play in v1.
 
 ### 9.2 Equipment activation
 
-Modify `EquipmentManagerSystem.OnEquipmentActivate` after all validation succeeds and before or after `OnActivate` based on recipe target:
+Modify `EquipmentManagerSystem.OnEquipmentActivate` after all existing validation succeeds:
 
-- For v1, publish modular effect immediately before `equipment.Equipment.OnActivate`.
-- Do not wait unless a future equipment effect explicitly requires queue sequencing.
+- If `ActivationEffectRecipe == null`, keep current direct behavior unchanged.
+- If `ActivationEffectRecipe != null`, enqueue `QueuedActivateEquipmentWithVisual` on the trigger queue and return.
+- The queued wrapper runs `equipment.Equipment.OnActivate`, publishes `EquipmentAbilityTriggered`, publishes modular visual request, and waits for modular completion.
+- Validation happens only before enqueue.
 - Do not decrement uses from visual code.
-- Existing `EquipmentAbilityTriggered` remains after gameplay activation.
-
-The real path may publish:
-
-```csharp
-EventManager.Publish(request);
-```
-
-No queue wrapper is required for v1 equipment activation unless a specific equipment already uses event queue sequencing. Equipment object callbacks that currently enqueue `QueuedStartBuffAnimation` may remain until migrated one by one.
+- Existing equipment use accounting remains wherever the equipment object or manager currently performs it.
+- If visual request creation fails inside the queued wrapper, gameplay activation still runs and the wrapper completes immediately.
 
 ### 9.3 Medal activation
 
-Modify `MedalManagerSystem.OnMedalActivate` inside the existing `EventQueueBridge.EnqueueTriggerAction` callback:
+Modify `MedalManagerSystem.OnMedalActivate`:
 
 1. Resolve the equipped medal.
-2. If it has `ActivationEffectRecipe`, publish `VisualEffectRequested`.
-3. Continue existing `MedalTriggered` publish and `medal.Activate()`.
+2. If `ActivationEffectRecipe == null`, keep the current `EventQueueBridge.EnqueueTriggerAction` behavior unchanged.
+3. If `ActivationEffectRecipe != null`, enqueue `QueuedActivateMedalWithVisual` on the trigger queue.
+4. The queued wrapper publishes `MedalTriggered`, calls `medal.Activate()`, publishes modular visual request, and waits for modular completion.
 
-Do not wait for visual completion in v1. Medal gameplay behavior remains authoritative.
+Do not add generic medal validation beyond the existing `MedalActivateEvent` path. If visual request creation fails inside the queued wrapper, gameplay activation still runs and the wrapper completes immediately.
 
 ### 9.4 Enemy attack
 
@@ -584,9 +703,13 @@ New behavior:
 1. Resolve current planned attack definition for `ctx`.
 2. If `AttackEffectRecipe != null`:
    - Build request with source enemy, target player, source kind `EnemyAttack`, source ID attack ID.
-   - Enqueue `QueuedStartVisualEffect`.
-   - Enqueue `QueuedWaitVisualEffectImpact`.
+   - Include `ContextId = ctx` in the request.
+   - Enqueue `QueuedStartEnemyAttackVisuals` so visual-only legacy lunge and modular FX start in parallel.
+   - Enqueue `QueuedWaitEnemyAttackVisuals`, which waits for modular impact and `EnemyAttackVisualComplete`.
+   - The modular coordinator publishes the single authoritative `EnemyAttackImpactNow { ContextId = ctx }` at modular impact.
 3. Else use existing `QueuedStartEnemyAttackAnimation(ctx)` and `QueuedWaitImpactEvent(ctx)`.
+
+If modular request creation fails before publishing, fall back to existing legacy-only enemy animation and wait so enemy damage still resolves through `EnemyAttackImpactNow`.
 
 Preserve `QueuedResolveAttackEvent(ctx)` and advancement logic exactly after the wait.
 
@@ -611,10 +734,12 @@ System responsibilities:
 - Subscribe to `VisualEffectRequested`.
 - Clone and validate recipes.
 - Resolve source and target anchors.
+- Reject requests whose concrete source/target anchors cannot be resolved. Preview rejection logs quietly. Non-preview rejection logs loudly and publishes emergency lifecycle events as described in section 6.
 - Create `ActiveVisualEffect` instances.
 - Tick elapsed time.
 - Publish `VisualEffectImpactReached` once when elapsed crosses impact time.
 - Publish `VisualEffectCompleted` once when elapsed reaches duration.
+- For accepted non-preview enemy attack requests with non-empty `ContextId`, publish `EnemyAttackImpactNow` once at modular impact.
 - Remove completed effects.
 - Publish shockwave events at impact for requests with `VisualEffectModule.Shockwave`.
 - Expose active effect snapshots to display systems without direct system references.
@@ -635,7 +760,6 @@ ECS/Components/VisualEffectComponents.cs
 ```csharp
 public sealed class ActiveVisualEffect : IComponent
 {
-    public Entity Owner { get; set; }
     public Guid RequestId { get; set; }
     public VisualEffectRecipe Recipe { get; set; }
     public VisualEffectTiming Timing { get; set; }
@@ -650,6 +774,7 @@ public sealed class ActiveVisualEffect : IComponent
     public bool IsPreview { get; set; }
     public VisualEffectSourceKind SourceKind { get; set; }
     public string SourceId { get; set; } = string.Empty;
+    public string ContextId { get; set; } = string.Empty;
     public string DisplayName { get; set; } = string.Empty;
 }
 ```
@@ -659,9 +784,9 @@ Anchor resolution:
 - Prefer `PortraitInfo.LastDrawCenter` when present and non-zero.
 - Fall back to `Transform.Position`.
 - For card source, use card `Transform.Position`.
-- For debug preview source fallback:
-  - player side: `(Game1.VirtualWidth * 0.30f, Game1.VirtualHeight * 0.42f)`
-  - enemy side: `(Game1.VirtualWidth * 0.72f, Game1.VirtualHeight * 0.42f)`
+- Do not use fallback screen-space anchors for preview or gameplay. If anchors cannot be resolved, reject the request.
+- `PortraitInfo.LastDrawCenter` may include the current battle presentation transform. This is acceptable; effects spawned during shake/punch may capture the currently drawn portrait position.
+- Active effect anchors are captured once at creation time and are not updated every frame.
 - Impact anchor defaults to target anchor.
 
 Mirroring:
@@ -684,10 +809,15 @@ Debug editables:
 | --- | ---: | --- |
 | `GlobalIntensityMultiplier` | `1.0f` | `Step = 0.01f` |
 | `GlobalParticleMultiplier` | `1.0f` | `Step = 0.01f` |
-| `PreviewSourceXPercent` | `0.30f` | `Step = 0.01f` |
-| `PreviewTargetXPercent` | `0.72f` | `Step = 0.01f` |
-| `PreviewYPercent` | `0.42f` | `Step = 0.01f` |
 | `MaxConcurrentEffects` | `16` | Integer |
+
+The coordinator bakes global intensity and particle multipliers into the cloned active recipe when creating `ActiveVisualEffect`. Changing debug multipliers affects new effects only.
+
+Capacity behavior:
+
+- Preview requests may be rejected when at capacity.
+- If a real request arrives at capacity, evict the oldest preview if one exists.
+- Do not drop real gameplay requests because queues may be waiting on their lifecycle events.
 
 ---
 
@@ -722,9 +852,28 @@ Draws modules:
 Implementation notes:
 
 - Fullscreen wash/vignette/smoke use `_pixel` strips, cached radial textures, or simple transparent overlays.
-- Shake and punch affect only visual overlay placement or a screen-space draw offset owned by this display path.
+- Shake and punch write a battle presentation transform that affects player and enemy portrait drawing only. They do not transform modular primitive/particle FX, HUD, cards, equipment, medals, or gameplay transforms.
 - Do not mutate actor `Transform.Position`.
 - Hit-stop freezes only modular effect visual sampling for its duration; it must not pause game simulation.
+
+Create component:
+
+```csharp
+public sealed class BattlePresentationTransform : IComponent
+{
+    public Vector2 Offset { get; set; } = Vector2.Zero;
+    public Vector2 Scale { get; set; } = Vector2.One;
+}
+```
+
+`ModularEffectScreenDisplaySystem` owns this component in v1:
+
+- Ensure a dedicated named entity `BattlePresentation` exists.
+- Rely on `EntityManager.CreateEntity` scene auto-tagging.
+- Reset `BattlePresentationTransform` to identity at the start of its update, then accumulate shake/punch from active effects.
+- Register the system in `SystemUpdatePhase.Presentation` before `PlayerDisplaySystem` and `EnemyDisplaySystem` update/draw consumers.
+- `PlayerDisplaySystem` and `EnemyDisplaySystem` read the component during `Draw()` and apply it to portrait pixels and `PortraitInfo.LastDraw*`.
+- `UIElement.Bounds` for portraits remains based on stable untransformed portrait placement so hover/click bounds do not jitter.
 
 ### 11.2 Primitive impact display
 
@@ -744,6 +893,9 @@ Draws modules:
 
 - `SwordArc`
 - `CrossSlash`
+- `ClawSlash`
+- `Bite`
+- `RockBlast`
 - `HammerArc`
 - `CrossBloom`
 - `Ring`
@@ -761,6 +913,7 @@ Implementation notes:
 - Beam and slash gradients may use multi-strip alpha/color lerp.
 - Rays can be approximated with triangles or radial strips if conic gradients are too expensive.
 - All positions are derived from `ActiveVisualEffect` anchors and `DirectionSign`.
+- Primitive FX are not affected by `BattlePresentationTransform`; they draw from captured stable anchors.
 
 ### 11.3 Particle display
 
@@ -785,10 +938,11 @@ Draws modules:
 Implementation notes:
 
 - Particle state is owned by this system.
-- Subscribe to `VisualEffectRequested` or detect newly created `ActiveVisualEffect` components and spawn particles once.
+- Detect newly created `ActiveVisualEffect` components by `RequestId` and spawn particles once. Do not subscribe directly to `VisualEffectRequested`.
 - Use deterministic per-request random seed from `RequestId.GetHashCode()` plus module offset.
-- Particle count = base count * recipe particle multiplier * global particle multiplier.
+- Particle count = base count * active recipe particle multiplier. The coordinator already baked in the global particle multiplier.
 - Expire particles independently when lifetime ends.
+- Particle FX are not affected by `BattlePresentationTransform`; they draw from captured stable anchors.
 
 Base counts:
 
@@ -828,7 +982,8 @@ If shaders are disabled, existing shockwave systems no-op. Other modules still r
 In `BattleSceneSystem`:
 
 1. Instantiate and register modular FX systems near existing battle presentation systems.
-2. Update coordinator before display systems in normal system order.
+2. Register coordinator, screen, primitive, and particle systems in `SystemUpdatePhase.Presentation`, before existing display systems that read their output.
+3. Coordinator advances elapsed and publishes impact/completion before display systems read active effects for the current frame.
 3. Draw order should be:
    - battle background
    - player and enemy portraits
@@ -844,6 +999,7 @@ Practical placement in current draw method:
 - Draw primitive/particle systems after `EnemyDisplaySystem.Draw` and `PixelBurstDisplaySystem.Draw`.
 - Draw screen overlays after actor-space FX and before HUD resource displays.
 - Do not draw modular FX over pay-cost modal foregrounds or debug menu.
+- `ModularEffectScreenDisplaySystem.Update` must happen before portrait draw so `BattlePresentationTransform` is ready, but its `Draw` still happens after actor-space FX.
 
 ---
 
@@ -939,6 +1095,7 @@ Each system:
 - Creates actions that call `EventManager.Publish(VisualEffectRequestFactory.ForDebugPreview(...))`.
 - Does not enqueue gameplay events.
 - Does not call object gameplay callbacks.
+- Debug actions may publish preview requests even when battle actors are missing. The coordinator rejects those preview requests quietly. Do not use fallback anchors.
 
 Factory enumeration:
 
@@ -968,7 +1125,7 @@ Debug preview target behavior:
 - Medal previews: source player, target per recipe.
 - Enemy attack previews: source enemy, target player.
 
-If battle entities do not exist, still publish preview with fallback screen anchors. The coordinator handles fallback coordinates for `IsPreview = true`.
+If required battle entities do not exist, preview playback is a no-op after coordinator rejection.
 
 ---
 
@@ -1017,11 +1174,14 @@ Use the object that is easiest to trigger in current test fights. Do not alter i
 
 ### 14.4 Enemy attacks
 
-Wire one enemy attack recipe:
+Wire representative enemy attack recipes:
 
 | Enemy attack | Recipe |
 | --- | --- |
 | `BoneStrike` or `TrainingStrike` | `VisualEffectPresets.EnemySlash()` |
+| A claw-themed attack such as `ScorchingClaw` or `FrozenClaw` | `VisualEffectPresets.EnemyClawSlash()` |
+| A bite/fang/maw attack such as `VelvetFangs` or `RazorMaw` | `VisualEffectPresets.EnemyBite()` |
+| A rock/sand impact attack such as `SandBlast` or `SandPound` | `VisualEffectPresets.EnemyRockBlast()` |
 
 Prefer an attack reachable with:
 
@@ -1076,6 +1236,8 @@ Tasks:
 
 - Add event contracts.
 - Add queue wrappers.
+- Add combined card/enemy start and wait wrappers.
+- Add trigger-queued equipment/medal activation wrappers.
 - Test waits by publishing matching and non-matching request IDs.
 
 ### Step 4 - Request factory
@@ -1104,6 +1266,8 @@ Tasks:
 - Spawn active effect entities.
 - Tick elapsed time.
 - Publish impact and completion once.
+- Publish `EnemyAttackImpactNow` at modular impact for accepted real enemy attack requests.
+- Emergency-complete rejected real requests.
 - Dispatch shockwave at impact.
 - Cleanup on scene load.
 - Add debug editables.
@@ -1119,6 +1283,8 @@ Files:
 Tasks:
 
 - Draw mockup modules at approximate fidelity.
+- Include `ClawSlash`, `Bite`, and `RockBlast`.
+- Add `BattlePresentationTransform` ownership in the screen display system.
 - Apply intensity, particle multiplier, and direction sign.
 - Use existing factories or add cached primitive helpers only when needed.
 - Add debug editables and debug replay actions where helpful.
@@ -1132,7 +1298,7 @@ File:
 Tasks:
 
 - Instantiate systems.
-- Add systems to world.
+- Add modular systems to the world in `SystemUpdatePhase.Presentation` before existing presentation consumers.
 - Add draw calls in the required order.
 - Ensure no direct system references are passed into other systems.
 
@@ -1150,7 +1316,8 @@ Tasks:
 - Add modular recipe branches.
 - Keep legacy fallback unchanged.
 - Ensure real gameplay waits use matching request IDs.
-- Ensure equipment and medal visual requests do not mutate gameplay.
+- Ensure card gameplay remains immediate.
+- Ensure recipe-enabled equipment and medal activations use trigger queue wrappers and wait for modular completion after gameplay activation.
 
 ### Step 9 - Debug annotation and debug providers
 
@@ -1180,8 +1347,8 @@ Files:
 Tasks:
 
 - Add recipe assignments in constructors.
-- Keep existing `Animation` values in place unless a specific duplicate visual is unacceptable.
-- If duplicate legacy and modular visuals occur for a recipe-enabled object, the gameplay integration branch should prevent the legacy animation path for that object.
+- Keep existing `Animation` values in place.
+- For cards, legacy animation and modular FX intentionally run in parallel for recipe-enabled objects.
 
 ---
 
@@ -1197,8 +1364,8 @@ All module values are starting defaults. Add `[DebugEditable]` for hardcoded tun
 | `RedVignette` | Fullscreen dark red vignette pulse; multiply-like approximation with alpha overlay. |
 | `SlashBand` | Wide diagonal band crossing impact direction; mirrored with direction sign. |
 | `SmokeScreen` | Several soft dark radial patches around impact; fade and drift upward. |
-| `Shake` | Screen-space draw offset sampled from keyframes; visual only. |
-| `PunchZoom` | Subtle visual scale pulse around screen center; visual only. |
+| `Shake` | Portrait-only draw offset sampled from keyframes; visual only. |
+| `PunchZoom` | Portrait-only visual scale pulse around screen center; visual only. |
 | `HitStop` | Hold modular FX sample time briefly; do not pause game update. |
 
 ### 16.2 Primitive modules
@@ -1207,6 +1374,9 @@ All module values are starting defaults. Add `[DebugEditable]` for hardcoded tun
 | --- | --- |
 | `SwordArc` | Fast tapered slash from source side through impact. |
 | `CrossSlash` | Two delayed slash bars crossing at impact. |
+| `ClawSlash` | Three fast parallel red-white slash streaks at impact. |
+| `Bite` | Closing top/bottom fang impression with red impact ring. |
+| `RockBlast` | Circular stone burst with chunk fragments and dusty impact center. |
 | `HammerArc` | Dark hammer silhouette rotating into target. |
 | `CrossBloom` | Expanding glowing cross at source or target based on recipe target. |
 | `Ring` | Expanding circular ring at impact. |
@@ -1249,15 +1419,23 @@ Required scenarios:
 - Presets return fresh instances.
 - `WithIntensity` does not mutate original recipe.
 - `WithParticleMultiplier` does not mutate original recipe.
+- Duplicate recipe modules are normalized away.
 - Timing profiles resolve expected durations and impact times.
 - Request factory resolves player/enemy targets correctly.
 - Debug preview request sets `IsPreview = true`.
 - Queue waits ignore non-matching request IDs.
 - Queue waits complete on matching impact/completion.
+- Queue waits do not have timeout behavior.
+- `QueuedWaitCardVisuals` completes only after every required legacy/modular signal arrives.
+- `QueuedWaitEnemyAttackVisuals` completes only after modular impact and legacy visual completion arrive.
 - Coordinator publishes impact exactly once.
 - Coordinator publishes completion exactly once.
+- Coordinator publishes `EnemyAttackImpactNow` at modular impact for accepted real enemy attack requests.
+- Coordinator emergency-completes rejected non-preview requests.
+- Coordinator quietly rejects invalid preview requests without lifecycle events.
 - Coordinator removes completed active effect entities.
 - Direction sign is `1` for player-to-enemy and `-1` for enemy-to-player.
+- `BattlePresentationTransform` affects portrait draw data but not portrait `UIElement.Bounds`.
 - Debug action list reflection ignores invalid signatures.
 - Debug action list invokes enabled actions only.
 
@@ -1265,12 +1443,14 @@ Required scenarios:
 
 Add or extend tests:
 
-- Card with modular attack recipe waits for visual impact before `OnPlay`.
-- Card with modular buff recipe waits for visual completion before `OnPlay`.
+- Card with modular attack recipe runs `OnPlay` immediately while queuing legacy attack and modular FX in parallel.
+- Card with modular buff recipe runs `OnPlay` immediately while queuing legacy buff and modular FX in parallel.
+- Recipe-enabled card with failed modular request creation skips queued card visuals but still runs gameplay immediately.
 - Card without modular recipe still uses legacy animation branch.
-- Equipment activation with recipe still calls `OnActivate` exactly once.
-- Medal activation with recipe still calls `Activate` exactly once.
-- Enemy attack with recipe waits for visual impact before resolution.
+- Equipment activation with recipe enqueues a trigger activation, calls `OnActivate` exactly once, publishes `EquipmentAbilityTriggered`, starts modular FX, and waits for completion.
+- Medal activation with recipe enqueues a trigger activation, publishes `MedalTriggered`, calls `Activate` exactly once, starts modular FX, and waits for completion.
+- Enemy attack with recipe starts visual-only legacy lunge and modular FX in parallel, publishes damage impact from modular impact only, and waits for modular impact plus legacy visual completion before advancing.
+- Enemy attack with recipe falls back to legacy-only animation if request creation fails before publish.
 - Debug preview of card/equipment/medal/enemy attack does not call gameplay callbacks.
 
 ### 17.3 Manual verification
@@ -1285,13 +1465,16 @@ Verify:
 
 - `Forge Strike` effect plays if available in hand.
 - `Sword` or `Strike` slash effect mirrors toward enemy.
-- Enemy attack modular effect mirrors toward player.
+- Enemy attack modular slash/claw/bite/rock effects mirror toward player.
+- Recipe-enabled card gameplay state changes immediately when played, even while visuals continue.
+- Recipe-enabled equipment/medal activations stall later trigger queue work until modular visual completion.
 - Debug menu has:
   - `Card Modular Effects`
   - `Equipment Modular Effects`
   - `Medal Modular Effects`
   - `Enemy Attack Modular Effects`
-- Debug buttons play effects without changing HP, AP, cards, equipment uses, medal counters, passives, or battle phase.
+- Debug buttons play effects without changing HP, AP, cards, equipment uses, medal counters, passives, or battle phase when battle actors exist.
+- Debug buttons quietly no-op when required battle actors are missing.
 - Debug menu scrolls when lists exceed panel height.
 - Shader disabled mode still shows non-shader modules:
 
@@ -1318,8 +1501,9 @@ The feature is complete when:
 - Representative objects can define modular effect recipes in code.
 - Real gameplay requests modular effects for recipe-enabled objects.
 - Legacy animation fallback still works for objects without recipes.
-- Player attack and enemy attack sequencing still waits for impact.
-- Buff/support sequencing still waits for completion where applicable.
+- Recipe-enabled card gameplay remains immediate, while card presentation queues legacy and modular visuals in parallel and waits for required visual signals.
+- Recipe-enabled equipment and medal activations are trigger-queued and wait for modular completion after gameplay activation.
+- Recipe-enabled enemy attack sequencing starts visual-only legacy lunge and modular FX in parallel, resolves damage at modular impact, and waits for modular impact plus legacy visual completion before advancing.
 - Effects mirror correctly between player-to-enemy and enemy-to-player.
 - Debug menu exposes object-type effect tabs with play buttons.
 - Debug playback is purely cosmetic and does not mutate game state.
@@ -1360,6 +1544,12 @@ The feature is complete when:
 | `ECS/Scenes/BattleScene/QueuedStartVisualEffect.cs` | Create queue start wrapper. |
 | `ECS/Scenes/BattleScene/QueuedWaitVisualEffectImpact.cs` | Create impact wait wrapper. |
 | `ECS/Scenes/BattleScene/QueuedWaitVisualEffectComplete.cs` | Create completion wait wrapper. |
+| `ECS/Scenes/BattleScene/QueuedStartCardVisuals.cs` | Start legacy card visual and modular request in parallel. |
+| `ECS/Scenes/BattleScene/QueuedWaitCardVisuals.cs` | Wait for required legacy card signal plus modular completion. |
+| `ECS/Scenes/BattleScene/QueuedStartEnemyAttackVisuals.cs` | Start visual-only enemy lunge and modular request in parallel. |
+| `ECS/Scenes/BattleScene/QueuedWaitEnemyAttackVisuals.cs` | Wait for modular impact plus enemy visual completion. |
+| `ECS/Scenes/BattleScene/QueuedActivateEquipmentWithVisual.cs` | Trigger-queued recipe-enabled equipment activation. |
+| `ECS/Scenes/BattleScene/QueuedActivateMedalWithVisual.cs` | Trigger-queued recipe-enabled medal activation. |
 | `ECS/Diagnostics/DebugAttributes.cs` | Add list-backed debug action annotation. |
 | `ECS/Scenes/BattleScene/DebugMenuSystem.cs` | Render list-backed debug actions. |
 | `ECS/Scenes/BattleScene/Debug/*ModularEffectsDebugSystem.cs` | Add four debug provider systems. |
@@ -1368,9 +1558,11 @@ The feature is complete when:
 | `ECS/Objects/Medals/MedalBase.cs` | Add activation recipe property. |
 | `ECS/Objects/Enemies/EnemyAttackBase.cs` | Add attack recipe property. |
 | `ECS/Scenes/BattleScene/CardPlaySystem.cs` | Add modular branch before legacy animation fallback. |
-| `ECS/Scenes/BattleScene/EquipmentManagerSystem.cs` | Publish activation recipe request. |
-| `ECS/Scenes/BattleScene/MedalManagerSystem.cs` | Publish activation recipe request. |
+| `ECS/Scenes/BattleScene/EquipmentManagerSystem.cs` | Enqueue recipe-enabled activation wrapper after validation. |
+| `ECS/Scenes/BattleScene/MedalManagerSystem.cs` | Enqueue recipe-enabled activation wrapper. |
 | `ECS/Scenes/BattleScene/EnemyAttackDisplaySystem.cs` | Use modular queue branch for recipe-enabled attacks. |
+| `ECS/Scenes/BattleScene/EnemyDisplaySystem.cs` | Support visual-only enemy lunge and `EnemyAttackVisualComplete`. |
+| `ECS/Scenes/BattleScene/PlayerDisplaySystem.cs` | Apply battle presentation transform to portrait draw only. |
 | `ECS/Scenes/BattleScene/BattleSceneSystem.cs` | Register and draw modular systems. |
 | `ECS/Factories/EnemyAttackFactory.cs` | Add attack enumeration if missing. |
 
@@ -1382,6 +1574,6 @@ These are implementation details, not product decisions.
 
 - If primitive drawing requires cached polygons, add methods to `PrimitiveTextureFactory` and clear caches on `DeleteCachesEvent`.
 - If debug list rendering becomes too large for `DebugMenuSystem`, extract internal helper methods inside the same system rather than creating a separate UI framework.
-- If preview fallback anchors make effects appear too high or low, tune only coordinator debug editables, not individual recipes.
 - If `HitStop` conflicts with queue timing, keep queue timing based on unpaused elapsed seconds and freeze only visual sampling.
-- If a recipe-enabled object still emits an old visual from inside its own callback, leave it unless it creates unacceptable duplication for the representative v1 objects. Remove duplicate object-local animation calls only for migrated objects.
+- `EventQueue.Clear()` can drop an active wait without an unsubscribe hook. Modular waits follow existing queue wrapper style and unsubscribe on normal completion only. A future queue cancellation hook could clean this up, but do not add it in this plan.
+- Card recipe visuals are additive to legacy card animation and existing `ModifyHpEvent`/`ApplyPassiveEvent`-driven displays in v1. Do not suppress legacy card splash/buff/lunge effects for migrated cards.
