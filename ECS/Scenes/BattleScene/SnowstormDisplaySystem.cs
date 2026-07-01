@@ -32,7 +32,7 @@ public class SnowstormDisplaySystem : Core.System
         _overlay?.IsAvailable == true;
 
     [DebugEditable(DisplayName = "Time Scale", Step = 0.01f, Min = 0f, Max = 5f)]
-    public float TimeScale { get; set; } = 1f;
+    public float TimeScale { get; set; } = 0.2f;
 
     [DebugEditable(DisplayName = "Snow Layers", Step = 1f, Min = 1f, Max = 6f)]
     public int SnowLayers { get; set; } = 6;
@@ -47,19 +47,19 @@ public class SnowstormDisplaySystem : Core.System
     public float SizeFar { get; set; } = 0.040f;
 
     [DebugEditable(DisplayName = "Size Near", Step = 0.001f, Min = 0.001f, Max = 0.5f)]
-    public float SizeNear { get; set; } = 0.190f;
+    public float SizeNear { get; set; } = 0.13f;
 
     [DebugEditable(DisplayName = "Flake Jitter", Step = 0.01f, Min = 0f, Max = 1f)]
-    public float FlakeJitter { get; set; } = 0.85f;
+    public float FlakeJitter { get; set; } = 0.59f;
 
     [DebugEditable(DisplayName = "Size Variation", Step = 0.01f, Min = 0f, Max = 1f)]
-    public float FlakeSizeVariation { get; set; } = 0.55f;
+    public float FlakeSizeVariation { get; set; } = 1f;
 
     [DebugEditable(DisplayName = "Density Far", Step = 0.01f, Min = 0f, Max = 1f)]
     public float DensityFar { get; set; } = 0.95f;
 
     [DebugEditable(DisplayName = "Density Near", Step = 0.01f, Min = 0f, Max = 1f)]
-    public float DensityNear { get; set; } = 0.45f;
+    public float DensityNear { get; set; } = 0.59f;
 
     [DebugEditable(DisplayName = "Fall Far", Step = 0.001f, Min = -1f, Max = 1f)]
     public float FallFar { get; set; } = 0.08f;
@@ -233,7 +233,7 @@ public class SnowstormDisplaySystem : Core.System
     public float HazeB { get; set; } = 0.68f;
 
     [DebugEditable(DisplayName = "Haze Base", Step = 0.01f, Min = 0f, Max = 1f)]
-    public float HazeBase { get; set; } = 0.10f;
+    public float HazeBase { get; set; } = 0.5f;
 
     [DebugEditable(DisplayName = "Haze Gust", Step = 0.01f, Min = 0f, Max = 1f)]
     public float HazeGust { get; set; } = 0.14f;
@@ -245,7 +245,7 @@ public class SnowstormDisplaySystem : Core.System
     public float HazeDrift { get; set; } = 0.06f;
 
     [DebugEditable(DisplayName = "Dither", Step = 0.001f, Min = 0f, Max = 0.1f)]
-    public float Dither { get; set; } = 0.012f;
+    public float Dither { get; set; } = 0f;
 
     public SnowstormDisplaySystem(
         EntityManager entityManager,

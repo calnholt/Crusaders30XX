@@ -32,7 +32,7 @@ public class VolcanoEmbersDisplaySystem : Core.System
         _overlay?.IsAvailable == true;
 
     [DebugEditable(DisplayName = "Time Scale", Step = 0.01f, Min = 0f, Max = 5f)]
-    public float TimeScale { get; set; } = 1f;
+    public float TimeScale { get; set; } = 0.3f;
 
     [DebugEditable(DisplayName = "Haze Amp", Step = 0.001f, Min = 0f, Max = 0.08f)]
     public float HazeAmp { get; set; } = 0.014f;
@@ -41,13 +41,13 @@ public class VolcanoEmbersDisplaySystem : Core.System
     public float HazeScale { get; set; } = 3.2f;
 
     [DebugEditable(DisplayName = "Haze Rise", Step = 0.01f, Min = -2f, Max = 2f)]
-    public float HazeRise { get; set; } = 0.55f;
+    public float HazeRise { get; set; } = 2f;
 
     [DebugEditable(DisplayName = "Haze Wave Frequency", Step = 0.01f, Min = 0f, Max = 40f)]
     public float HazeWaveFrequency { get; set; } = 11f;
 
     [DebugEditable(DisplayName = "Haze Wave Speed", Step = 0.01f, Min = -8f, Max = 8f)]
-    public float HazeWaveSpeed { get; set; } = 2.2f;
+    public float HazeWaveSpeed { get; set; } = 2.49f;
 
     [DebugEditable(DisplayName = "Haze Noise Mix", Step = 0.01f, Min = 0f, Max = 2f)]
     public float HazeNoiseMix { get; set; } = 0.65f;
@@ -59,13 +59,13 @@ public class VolcanoEmbersDisplaySystem : Core.System
     public int HazeOctaves { get; set; } = 3;
 
     [DebugEditable(DisplayName = "Haze Reach", Step = 0.01f, Min = 0.01f, Max = 2f)]
-    public float HazeReach { get; set; } = 1.10f;
+    public float HazeReach { get; set; } = 2f;
 
     [DebugEditable(DisplayName = "Haze Floor", Step = 0.01f, Min = 0f, Max = 1f)]
     public float HazeFloor { get; set; } = 0.18f;
 
     [DebugEditable(DisplayName = "Ember Layers", Step = 1f, Min = 1f, Max = 7f)]
-    public int EmberLayers { get; set; } = 5;
+    public int EmberLayers { get; set; } = 7;
 
     [DebugEditable(DisplayName = "Scale Far", Step = 0.01f, Min = 0.01f, Max = 40f)]
     public float ScaleFar { get; set; } = 16f;
@@ -95,10 +95,10 @@ public class VolcanoEmbersDisplaySystem : Core.System
     public float RiseNear { get; set; } = 0.150f;
 
     [DebugEditable(DisplayName = "Ember Drift", Step = 0.001f, Min = -0.5f, Max = 0.5f)]
-    public float EmberDrift { get; set; } = 0.010f;
+    public float EmberDrift { get; set; } = 0.021f;
 
     [DebugEditable(DisplayName = "Wander Amp", Step = 0.001f, Min = 0f, Max = 0.5f)]
-    public float WanderAmp { get; set; } = 0.040f;
+    public float WanderAmp { get; set; } = 0.094f;
 
     [DebugEditable(DisplayName = "Wander Scale", Step = 0.01f, Min = 0.01f, Max = 10f)]
     public float WanderScale { get; set; } = 1.4f;
@@ -107,7 +107,7 @@ public class VolcanoEmbersDisplaySystem : Core.System
     public float WanderSpeed { get; set; } = 0.20f;
 
     [DebugEditable(DisplayName = "Sway Amp", Step = 0.001f, Min = 0f, Max = 0.5f)]
-    public float SwayAmp { get; set; } = 0.060f;
+    public float SwayAmp { get; set; } = 0.072f;
 
     [DebugEditable(DisplayName = "Sway Rate Min", Step = 0.01f, Min = 0f, Max = 10f)]
     public float SwayRateMin { get; set; } = 0.5f;
