@@ -43,7 +43,7 @@ public class FallenShepherd : EnemyBase
     {
         Id = "fallen_shepherd";
         Name = "Fallen Shepherd";
-        HealthPerCard = 1.43f;
+        HP = 29;
         IsBoss = true;
         Phases = 3;
     }

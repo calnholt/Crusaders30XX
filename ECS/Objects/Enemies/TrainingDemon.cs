@@ -10,7 +10,7 @@ public class TrainingDemon : EnemyBase
     {
         Id = "training_demon";
         Name = "Training Demon";
-        HealthPerCard = 1.3f;
+        HP = 26;
     }
 
     public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)

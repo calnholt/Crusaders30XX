@@ -1961,23 +1961,11 @@
 /processorParam:DebugMode=Auto
 /build:Shaders/LayeredHoles.fx
 
-#begin Shaders/FallingLeavesBufferA.fx
+#begin Shaders/JungleBackground.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
-/build:Shaders/FallingLeavesBufferA.fx
-
-#begin Shaders/FallingLeavesBufferB.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:Shaders/FallingLeavesBufferB.fx
-
-#begin Shaders/FallingLeavesImage.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:Shaders/FallingLeavesImage.fx
+/build:Shaders/JungleBackground.fx
 
 #---------------------------------- Music ---------------------------------#
 

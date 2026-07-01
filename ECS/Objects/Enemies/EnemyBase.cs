@@ -13,7 +13,8 @@ public abstract class EnemyBase : IDisposable
   public string Name { get; set; }
   public int MaxHealth { get; set; }
   public int CurrentHealth { get; set; }
-  public float HealthPerCard { get; protected set; }
+  public const int ReferenceDeckCardCount = 20;
+  public int HP { get; protected set; }
   protected int StartingHealthBelowMax { get; set; }
   public Action<EntityManager> OnStartOfBattle { get; protected set; }
   public EntityManager EntityManager { get; set; }
@@ -35,7 +36,7 @@ public abstract class EnemyBase : IDisposable
 
   public void ApplyHealthFromDeckWeight(float deckWeight)
   {
-    MaxHealth = (int)Math.Round(HealthPerCard * Math.Max(0f, deckWeight));
+    MaxHealth = (int)Math.Round(HP * Math.Max(0f, deckWeight) / ReferenceDeckCardCount);
     CurrentHealth = MaxHealth - StartingHealthBelowMax;
   }
 

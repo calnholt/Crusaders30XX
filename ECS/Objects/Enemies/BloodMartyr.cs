@@ -15,7 +15,7 @@ public class BloodMartyr : EnemyBase
   {
     Id = "blood_martyr";
     Name = "Blood Martyr";
-    HealthPerCard = 1.76f;
+    HP = 35;
   }
 
   public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)

@@ -18,7 +18,7 @@ public class Succubus : EnemyBase
   {
     Id = "succubus";
     Name = "Succubus";
-    HealthPerCard = 1.32f;
+    HP = 26;
     StartingHealthBelowMax = 3;
 
     OnStartOfBattle = (entityManager) =>

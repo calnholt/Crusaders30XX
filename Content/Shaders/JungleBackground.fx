@@ -1,30 +1,46 @@
-// Falling leaves raw scene pass, converted from FallingLeavesBufferA.glsl.
+// Jungle falling leaves background compositor, converted from jungle_background.glsl.
 
 float4x4 MatrixTransform;
 float2 ViewportSize;
 float Time;
 
-float LeafCount = 80.0;
-float3 LeafGreenDark = float3(0.04, 0.22, 0.03);
-float3 LeafGreenLight = float3(0.45, 0.80, 0.18);
-float LeafHueJitter = 0.10;
+float LeafCount = 150.0;
+float FieldOverfill = 1.15;
+float TimeScale = 1.0;
+
+float FallBase = 0.05;
+float FallParallax = 0.9;
+float WindDrift = -0.05;
+float WindParallax = 1.0;
+float WindGust = 0.01;
+float WindGustRate = 0.02;
+
+float2 SpinRate = float2(0.20, 0.30);
+float SpinDesync = 1.0;
+float SwayAmp = 0.35;
+float SwayTilt = 0.45;
+float SwayRateMin = 0.5;
+float SwayRateMax = 1.6;
+
+float LeafRadiusMin = 0.3;
+float LeafRadiusVariation = 0.8;
+float3 LeafColorDark = float3(0.05, 0.22, 0.03);
+float3 LeafColorLight = float3(0.45, 0.80, 0.18);
+float LeafHueJitter = 0.12;
 float LeafBrightness = 1.0;
-float ScrollX = -0.06;
-float ScrollY = 0.05;
-float2 Spread = float2(15.0, 13.0);
-float2 SpinRate = float2(0.2, 0.3);
-float LeafRadiusMin = 0.7;
-float LeafRadiusVariation = 0.6;
+float FarFade = 0.40;
+
+float CameraDistance = 15.0;
+float CameraFov = 1.5;
+float LeafZBack = 8.0;
+
 float BackgroundBrightness = 1.0;
-float3 BackgroundSkyLow = float3(0.02, 0.05, 0.08);
-float3 BackgroundSkyHigh = float3(0.10, 0.16, 0.20);
-float3 LightDir = float3(0.57735026919, 0.57735026919, 0.57735026919);
-float GlarePower = 16.0;
-float FogAmount = 0.8;
-float FogFloor = 0.004;
+float3 BackgroundSkyLow = float3(0.20, 0.26, 0.30);
+float3 BackgroundSkyHigh = float3(0.45, 0.52, 0.55);
 
 static const float Pi = 3.14159265359;
-static const int MaxLeafCount = 120;
+static const float Tau = 6.28318530718;
+static const int MaxLeafCount = 150;
 
 texture Texture : register(t0);
 sampler2D TextureSampler : register(s0) = sampler_state
@@ -150,10 +166,10 @@ float LeaveSphere(float3 ro, float3 rd, float3 ce, float2 an, float ra)
     p.yz = Rotate(p.yz, an.y);
     q.yz = Rotate(q.yz, an.y);
 
-    float di = max(ra * 2.0, 0.0001);
-    float2 r = float2(ra, 1.0) / di;
-    float2 pf = Polar(p) * r;
-    float2 pb = Polar(q) * r;
+    float diameter = max(ra * 2.0, 0.0001);
+    float2 ratio = float2(ra, 1.0) / diameter;
+    float2 pf = Polar(p) * ratio;
+    float2 pb = Polar(q) * ratio;
     float lf = step(SdLeave(pf), 0.0);
     float lb = step(SdLeave(pb), 0.0);
     return lf * (1.0 - lb) + lb;
@@ -177,38 +193,59 @@ float3 Hash3(inout float n)
     return frac(sin(n) * float3(2348.3241, 4591.5392, 3412.4231));
 }
 
-float3 RenderLeaves(float3 ro, float3 rd, float3 bg)
+float3 Render(float3 ro, float3 rd, float3 bg)
 {
     float3 col = bg;
-    float2 an = Time * SpinRate;
+    float t = Time * max(TimeScale, 0.0);
+    float gustRate = max(abs(WindGustRate), 0.0001);
+    float gust = WindGust * (0.6 * sin(t * gustRate) + 0.4 * sin(t * gustRate * 2.3 + 1.7));
+
+    float2 viewport = max(ViewportSize, float2(1.0, 1.0));
+    float aspect = viewport.x / viewport.y;
+    float halfV = (max(CameraDistance, 0.001) + max(LeafZBack, 0.001)) * 0.5 / max(CameraFov, 0.001);
+    float2 field = float2(halfV * aspect, halfV) * 2.0 * max(FieldOverfill, 0.001);
+    float2 an = t * SpinRate;
     float count = clamp(LeafCount, 1.0, MaxLeafCount);
+    float denominator = max(count - 1.0, 1.0);
+    float swayRateLow = max(min(SwayRateMin, SwayRateMax), 0.0001);
+    float swayRateHigh = max(max(SwayRateMin, SwayRateMax), swayRateLow + 0.0001);
 
     [loop]
     for (int leaf = 0; leaf < MaxLeafCount; leaf++)
     {
         if (leaf < count)
         {
-            float i = leaf / count;
-            float n = i + 1.0;
-            float2 p = (0.5 - frac(Hash2(n) + float2(ScrollX, ScrollY) * Time)) * Spread;
-            an += Hash1(n) - 0.5;
+            float depth = leaf / denominator;
+            float n = depth + 1.0;
+            float2 rnd2 = Hash2(n);
+            float par = 1.0 + WindParallax * depth;
+            float2 move = float2(
+                WindDrift * par + gust * (0.3 + depth),
+                FallBase * (1.0 + FallParallax * depth)
+            ) * t;
+            float2 p = (0.5 - frac(rnd2 + move)) * field;
+
+            an += (Hash1(n) - 0.5) * SpinDesync;
 
             float3 rnd = Hash3(n);
-            float3 mat = lerp(LeafGreenDark, LeafGreenLight, rnd.x);
+            float3 mat = lerp(LeafColorDark, LeafColorLight, rnd.x);
             mat.r += (rnd.y - 0.5) * LeafHueJitter;
             mat.g += (rnd.z - 0.5) * LeafHueJitter * 0.5;
             mat = clamp(mat * max(LeafBrightness, 0.0), 0.0, 1.0);
+            mat *= lerp(1.0 - saturate(FarFade), 1.0, depth);
 
-            float3 ce = float3(p, 8.0 * (1.0 - i));
             float ra = max(LeafRadiusMin + LeafRadiusVariation * Hash1(n), 0.001);
-            float alpha = LeaveSphere(ro, rd, ce, Pi * an, ra);
+            float swayRate = lerp(swayRateLow, swayRateHigh, Hash1(n));
+            float swayPhase = t * swayRate + Hash1(n) * Tau;
+            p.x += SwayAmp * sin(swayPhase);
+            float2 anLeaf = an + float2(SwayTilt * sin(swayPhase + Pi * 0.5), 0.0);
+
+            float3 ce = float3(p, max(LeafZBack, 0.001) * (1.0 - depth));
+            float alpha = LeaveSphere(ro, rd, ce, Pi * anLeaf, ra);
             col = lerp(col, mat, alpha);
         }
     }
 
-    float3 lightDir = normalize(LightDir);
-    float glare = pow(clamp(dot(rd, lightDir), 0.0, 1.0), max(GlarePower, 0.001));
-    col += max(FogAmount, 0.0) * Fbm(12.0 * rd.xy + 0.1 * Time * float2(1.0, 3.0)) * (max(FogFloor, 0.0) + glare);
     return col;
 }
 
@@ -216,17 +253,17 @@ float4 SpritePixelShader(VSOutput input) : COLOR0
 {
     float2 viewport = max(ViewportSize, float2(1.0, 1.0));
     float2 uv = float2(input.TexCoord.x, 1.0 - input.TexCoord.y);
-    float2 p = (uv * viewport - 0.5 * viewport) / viewport.y;
-    float3 ro = float3(0.0, 0.0, -3.0);
-    float3 rd = normalize(float3(p, 1.5));
+    float2 pc = (uv * viewport - 0.5 * viewport) / viewport.y;
+    float3 ro = float3(0.0, 0.0, -max(CameraDistance, 0.001));
+    float3 rd = normalize(float3(pc * max(CameraFov, 0.001), 1.0));
 
     float3 tex = tex2D(TextureSampler, input.TexCoord).rgb;
     float hasTex = step(0.01, dot(tex, float3(1.0, 1.0, 1.0)));
     float3 sky = lerp(BackgroundSkyLow, BackgroundSkyHigh, uv.y);
     float3 bg = lerp(sky, tex, hasTex) * max(BackgroundBrightness, 0.0);
 
-    float3 col = RenderLeaves(ro, rd, bg);
-    return float4(saturate(col * 1.2), 1.0) * input.Color;
+    float3 col = Render(ro, rd, bg);
+    return float4(saturate(col), 1.0) * input.Color;
 }
 
 technique SpriteDrawing

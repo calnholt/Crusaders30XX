@@ -16,7 +16,7 @@ public class Ninja : EnemyBase
   {
     Id = "ninja";
     Name = "Ninja";
-    HealthPerCard = 1.1f;
+    HP = 22;
 
     OnStartOfBattle = (entityManager) =>
     {

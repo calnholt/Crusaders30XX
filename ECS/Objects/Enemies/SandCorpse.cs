@@ -12,7 +12,7 @@ public class SandCorpse : EnemyBase
     Id = "sand_corpse";
     Name = "Sand Corpse";
     IsTutorialOnly = true;
-    HealthPerCard = 0.825f;
+    HP = 16;
   }
   public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
   {

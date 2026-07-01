@@ -7,6 +7,7 @@ using Crusaders30XX.ECS.Data.Loadouts;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Factories;
+using Crusaders30XX.ECS.Objects.Enemies;
 using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Singletons;
 using Xunit;
@@ -241,7 +242,7 @@ public class WayStationRunSetupTests
 		// Expected with fix: deckWeight=29, pre-mod=48, Easy(0.8)=38
 		const int cardCount = 27;
 		const int climbTime = 8;
-		const float healthPerCard = 1.65f;    // Wyvern
+		const int wyvernHp = 33;
 		const float expectedModifier = 0.8f;   // Easy
 
 		var world = PrepareWorldWithLoadout(
@@ -263,19 +264,19 @@ public class WayStationRunSetupTests
 		Console.WriteLine($"Climb time:                {actualClimbTime}");
 		Console.WriteLine($"ShopRefreshInterval:       {ClimbRuleService.ShopRefreshInterval}");
 		Console.WriteLine($"TimeBonusMultiplier:       {RunDeckService.EnemyHealthClimbTimeBonusMultiplier}");
-		Console.WriteLine($"HealthPerCard (Wyvern):    {healthPerCard}");
+		Console.WriteLine($"Wyvern HP (20-card base):  {wyvernHp}");
 
 		var deckEntity = world.EntityManager.GetEntitiesWithComponent<Deck>().First();
 		var deck = deckEntity.GetComponent<Deck>();
 		float deckWeight = RunDeckService.CalculateEnemyHealthDeckWeight(
 			world.EntityManager, deck.Cards.Count, 0);
 		int timeBonus = (climbTime / ClimbRuleService.ShopRefreshInterval) * RunDeckService.EnemyHealthClimbTimeBonusMultiplier;
-		int preModifierHp = (int)Math.Round(healthPerCard * deckWeight);
+		int preModifierHp = (int)Math.Round(wyvernHp * deckWeight / EnemyBase.ReferenceDeckCardCount);
 		int postModifierHp = (int)Math.Round(preModifierHp * actualModifier);
 
 		Console.WriteLine($"Time bonus:                {timeBonus}");
 		Console.WriteLine($"Deck weight:               {deckWeight} (cards + timeBonus)");
-		Console.WriteLine($"Pre-modifier HP:           {preModifierHp} (= Round({healthPerCard} * {deckWeight}))");
+		Console.WriteLine($"Pre-modifier HP:           {preModifierHp} (= Round({wyvernHp} * {deckWeight} / {EnemyBase.ReferenceDeckCardCount}))");
 		Console.WriteLine($"Post-modifier HP:          {postModifierHp} (= Round({preModifierHp} * {actualModifier}))");
 
 		var enemyEntity = EntityFactory.CreateEnemyFromId(world, "wyvern", world.EntityManager);

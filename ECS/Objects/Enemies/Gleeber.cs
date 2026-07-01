@@ -16,7 +16,7 @@ public class Gleeber : EnemyBase
     Id = "gleeber";
     Name = "Gleeber";
     IsTutorialOnly = true;
-    HealthPerCard = 0.715f;
+    HP = 14;
   }
   public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
   {

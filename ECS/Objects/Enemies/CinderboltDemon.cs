@@ -15,7 +15,7 @@ namespace Crusaders30XX.ECS.Objects.Enemies
         {
             Id = "cinderbolt_demon";
             Name = "Cinderbolt Demon";
-            HealthPerCard = 1.485f;
+            HP = 30;
         }
 
         public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)

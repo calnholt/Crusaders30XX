@@ -17,7 +17,7 @@ public class Thornreaver : EnemyBase
   {
     Id = "thornreaver";
     Name = "Thornreaver";
-    HealthPerCard = 1.7f;
+    HP = 34;
   }
 
   public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)

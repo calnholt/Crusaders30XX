@@ -191,6 +191,17 @@ namespace Crusaders30XX.ECS.Events
     }
 
     /// <summary>
+    /// Event published after the start-of-turn draw request sequence has attempted to resolve.
+    /// </summary>
+    public class StartOfTurnDrawResolvedEvent
+    {
+        public Entity Player { get; set; }
+        public Entity Deck { get; set; }
+        public SubPhase Phase { get; set; }
+        public int RequestedDrawCount { get; set; }
+    }
+
+    /// <summary>
     /// Event to request drawing N cards from the current deck without reshuffling
     /// </summary>
     public class RequestDrawCardsEvent

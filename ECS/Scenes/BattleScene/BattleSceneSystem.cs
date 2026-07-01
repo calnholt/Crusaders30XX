@@ -49,7 +49,7 @@ namespace Crusaders30XX.ECS.Systems
 		private VolcanoEmbersDisplaySystem _volcanoEmbersDisplaySystem;
 		private SnowstormDisplaySystem _snowstormDisplaySystem;
 		private PurpleZapsDisplaySystem _purpleZapsDisplaySystem;
-		private FallingLeavesDisplaySystem _fallingLeavesDisplaySystem;
+		private JungleBackgroundDisplaySystem _jungleBackgroundDisplaySystem;
 		private PlayerHudLayoutSystem _playerHudLayoutSystem;
 		private PlayerHudFeedbackSystem _playerHudFeedbackSystem;
 		private PlayerHudRootDisplaySystem _playerHudRootDisplaySystem;
@@ -102,6 +102,7 @@ namespace Crusaders30XX.ECS.Systems
 		private CardPlaySystem _cardPlaySystem;
 		private EndTurnDisplaySystem _endTurnDisplaySystem;
 		private DrawHandSystem _battlePhaseDrawSystem;
+		private DeckEmptyDeathCheckSystem _deckEmptyDeathCheckSystem;
 		private PhaseCoordinatorSystem _phaseCoordinatorSystem;
 		private PhaseChangeEventSystem _phaseChangeEventSystem;
 		private PayCostOverlaySystem _payCostOverlaySystem;
@@ -309,7 +310,7 @@ namespace Crusaders30XX.ECS.Systems
 			bool hasVolcanoEmbers = _volcanoEmbersDisplaySystem?.CanComposite == true;
 			bool hasSnowstorm = _snowstormDisplaySystem?.CanComposite == true;
 			bool hasPurpleZaps = _purpleZapsDisplaySystem?.CanComposite == true;
-			bool hasFallingLeaves = _fallingLeavesDisplaySystem?.CanComposite == true;
+			bool hasJungleBackground = _jungleBackgroundDisplaySystem?.CanComposite == true;
 			if (!hasDesertStorm)
 			{
 				FrameProfiler.Measure("DesertBackgroundEffectSystem.Draw", _desertBackgroundEffectSystem.Draw);
@@ -349,14 +350,14 @@ namespace Crusaders30XX.ECS.Systems
 				);
 				backgroundSource = _bgTemp;
 			}
-			// else if (hasFallingLeaves)
-			// {
-			// 	FrameProfiler.Measure(
-			// 		"FallingLeavesDisplaySystem.Composite",
-			// 		() => _fallingLeavesDisplaySystem.Composite(_bgRt, _bgTemp)
-			// 	);
-			// 	backgroundSource = _bgTemp;
-			// }
+			else if (hasJungleBackground)
+			{
+				FrameProfiler.Measure(
+					"JungleBackgroundDisplaySystem.Composite",
+					() => _jungleBackgroundDisplaySystem.Composite(_bgRt, _bgTemp)
+				);
+				backgroundSource = _bgTemp;
+			}
 			
 			// Apply bloodshot effect to backgrounds if active
 			bool hasBloodshot = ShaderRuntimeOptions.ShadersEnabled &&
@@ -708,7 +709,7 @@ namespace Crusaders30XX.ECS.Systems
 			_volcanoEmbersDisplaySystem = new VolcanoEmbersDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_snowstormDisplaySystem = new SnowstormDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_purpleZapsDisplaySystem = new PurpleZapsDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
-			_fallingLeavesDisplaySystem = new FallingLeavesDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
+			_jungleBackgroundDisplaySystem = new JungleBackgroundDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_playerWispParticleSystem = new PlayerWispParticleSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_playerTemperanceActivationDisplaySystem = new PlayerTemperanceActivationDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_playerAnimationSystem = new PlayerAnimationSystem(_world.EntityManager);
@@ -771,6 +772,7 @@ namespace Crusaders30XX.ECS.Systems
 			_cardPlaySystem = new CardPlaySystem(_world.EntityManager);
 			_guidedTutorialDirectorSystem = new GuidedTutorialDirectorSystem(_world.EntityManager);
 			_battlePhaseDrawSystem = new DrawHandSystem(_world.EntityManager);
+			_deckEmptyDeathCheckSystem = new DeckEmptyDeathCheckSystem(_world.EntityManager);
 			_phaseCoordinatorSystem = new PhaseCoordinatorSystem(_world.EntityManager);
 			_phaseChangeEventSystem = new PhaseChangeEventSystem(_world.EntityManager);
 			_weaponManagementSystem = new WeaponManagementSystem(_world.EntityManager);
@@ -850,7 +852,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_volcanoEmbersDisplaySystem);
 			_world.AddSystem(_snowstormDisplaySystem);
 			_world.AddSystem(_purpleZapsDisplaySystem);
-			_world.AddSystem(_fallingLeavesDisplaySystem);
+			_world.AddSystem(_jungleBackgroundDisplaySystem);
 			_world.AddSystem(_playerWispParticleSystem);
 			_world.AddSystem(_playerAnimationSystem);
 			_world.AddSystem(_playerTemperanceActivationDisplaySystem);
@@ -902,6 +904,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_cardPlaySystem);
 			_world.AddSystem(_guidedTutorialDirectorSystem);
 			_world.AddSystem(_battlePhaseDrawSystem);
+			_world.AddSystem(_deckEmptyDeathCheckSystem);
 			_world.AddSystem(_phaseCoordinatorSystem);
 			_world.AddSystem(_phaseChangeEventSystem);
 			_world.AddSystem(_weaponManagementSystem);

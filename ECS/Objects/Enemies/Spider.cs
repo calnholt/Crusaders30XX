@@ -17,7 +17,7 @@ public class Spider : EnemyBase
   {
     Id = "spider";
     Name = "Spider";
-    HealthPerCard = 1.4f;
+    HP = 28;
 
     OnStartOfBattle = (entityManager) =>
     {
