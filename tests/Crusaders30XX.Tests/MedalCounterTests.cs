@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Objects.Medals;
+using Crusaders30XX.ECS.Services;
 using Xunit;
 
 namespace Crusaders30XX.Tests;
@@ -150,6 +151,79 @@ public class MedalCounterTests
 
 			EventManager.Publish(new ShowQuestRewardOverlay { IsEncounterReward = false });
 			Assert.Equal(0, medal.CurrentCount);
+		}
+		finally
+		{
+			EventManager.Clear();
+			SaveCache.DeleteSaveFilesIfPresent();
+		}
+	}
+
+	[Fact]
+	public void StPeter_unsubscribes_on_dispose()
+	{
+		EventManager.Clear();
+		try
+		{
+			var entityManager = new EntityManager();
+			var medalEntity = entityManager.CreateEntity("Medal");
+			var medal = new StPeter();
+			medal.Initialize(entityManager, medalEntity);
+			entityManager.AddComponent(medalEntity, new EquippedMedal { Medal = medal });
+
+			var activateCount = 0;
+			EventManager.Subscribe<MedalActivateEvent>(_ => activateCount++);
+
+			var blackCard = entityManager.CreateEntity("BlackCard");
+			entityManager.AddComponent(blackCard, new CardData { Color = CardData.CardColor.Black });
+
+			EventManager.Publish(new CardBlockedEvent { Card = blackCard });
+			EventManager.Publish(new CardBlockedEvent { Card = blackCard });
+			EventManager.Publish(new CardBlockedEvent { Card = blackCard });
+			Assert.Equal(1, activateCount);
+
+			medal.Dispose();
+
+			EventManager.Publish(new CardBlockedEvent { Card = blackCard });
+			EventManager.Publish(new CardBlockedEvent { Card = blackCard });
+			EventManager.Publish(new CardBlockedEvent { Card = blackCard });
+			Assert.Equal(1, activateCount);
+		}
+		finally
+		{
+			EventManager.Clear();
+		}
+	}
+
+	[Fact]
+	public void StPeter_does_not_trigger_after_run_end()
+	{
+		EventManager.Clear();
+		try
+		{
+			SaveCache.DeleteSaveFilesIfPresent();
+			SaveCache.StartNewRun();
+
+			var entityManager = new EntityManager();
+			var player = entityManager.CreateEntity("Player");
+			entityManager.AddComponent(player, new Player());
+
+			RunMedalService.AcquireAndEquip(entityManager, "st_peter");
+
+			var activateCount = 0;
+			EventManager.Subscribe<MedalActivateEvent>(_ => activateCount++);
+
+			RunLifecycleService.EndCurrentRun(entityManager);
+
+			var blackCard = entityManager.CreateEntity("BlackCard");
+			entityManager.AddComponent(blackCard, new CardData { Color = CardData.CardColor.Black });
+
+			for (int i = 0; i < 3; i++)
+			{
+				EventManager.Publish(new CardBlockedEvent { Card = blackCard });
+			}
+
+			Assert.Equal(0, activateCount);
 		}
 		finally
 		{

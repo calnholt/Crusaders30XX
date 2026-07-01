@@ -21,6 +21,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteBatch _spriteBatch;
 		private readonly ContentManager _content;
 		private readonly Texture2D _pixel;
+		private const int LayeredBackgroundTextureSlotCount = 3;
 		private LayeredHolesOverlay _overlay;
 		private bool _overlayFailed;
 		private bool _wasClimbScene;
@@ -204,20 +205,87 @@ namespace Crusaders30XX.ECS.Systems
 			ConfigureOverlay(middle, bottom, layerSplit);
 
 			BlendState savedBlend = _graphicsDevice.BlendState;
-			SamplerState savedSampler = _graphicsDevice.SamplerStates[0];
+			var savedSamplers = CaptureSamplerStates();
+			var savedTextures = CaptureTextureSlots();
 			DepthStencilState savedDepth = _graphicsDevice.DepthStencilState;
 			RasterizerState savedRasterizer = _graphicsDevice.RasterizerState;
 
 			_spriteBatch.End();
-			_overlay.Begin(_spriteBatch);
-			_overlay.Draw(_spriteBatch, top, destination);
-			_overlay.End(_spriteBatch);
-			_spriteBatch.Begin(
-				SpriteSortMode.Immediate,
-				savedBlend,
-				savedSampler,
-				savedDepth,
-				savedRasterizer);
+			bool overlayBatchStarted = false;
+			try
+			{
+				_overlay.Begin(_spriteBatch);
+				overlayBatchStarted = true;
+				_overlay.Draw(_spriteBatch, top, destination);
+			}
+			finally
+			{
+				try
+				{
+					if (overlayBatchStarted)
+					{
+						_overlay.End(_spriteBatch);
+					}
+				}
+				finally
+				{
+					RestoreTextureSlots(savedTextures);
+					ClearExtraTextureSlots();
+					RestoreSamplerStates(savedSamplers);
+					_spriteBatch.Begin(
+						SpriteSortMode.Immediate,
+						savedBlend,
+						savedSamplers[0],
+						savedDepth,
+						savedRasterizer);
+				}
+			}
+		}
+
+		private Texture[] CaptureTextureSlots()
+		{
+			var textures = new Texture[LayeredBackgroundTextureSlotCount];
+			for (int i = 0; i < textures.Length; i++)
+			{
+				textures[i] = _graphicsDevice.Textures[i];
+			}
+
+			return textures;
+		}
+
+		private SamplerState[] CaptureSamplerStates()
+		{
+			var samplers = new SamplerState[LayeredBackgroundTextureSlotCount];
+			for (int i = 0; i < samplers.Length; i++)
+			{
+				samplers[i] = _graphicsDevice.SamplerStates[i];
+			}
+
+			return samplers;
+		}
+
+		private void RestoreTextureSlots(Texture[] textures)
+		{
+			for (int i = 0; i < textures.Length; i++)
+			{
+				_graphicsDevice.Textures[i] = textures[i];
+			}
+		}
+
+		private void ClearExtraTextureSlots()
+		{
+			for (int i = 1; i < LayeredBackgroundTextureSlotCount; i++)
+			{
+				_graphicsDevice.Textures[i] = null;
+			}
+		}
+
+		private void RestoreSamplerStates(SamplerState[] samplers)
+		{
+			for (int i = 0; i < samplers.Length; i++)
+			{
+				_graphicsDevice.SamplerStates[i] = samplers[i];
+			}
 		}
 
 		private void DrawStaticBackground(BattleLocation location, Rectangle dest)

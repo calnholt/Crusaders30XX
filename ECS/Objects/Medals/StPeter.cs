@@ -42,5 +42,10 @@ namespace Crusaders30XX.ECS.Objects.Medals
             Console.WriteLine($"[StPeter] Activate: Drawing 1 card");
             EventManager.Publish(new DrawRandomCardFromDiscardEvent { Amount = 1 });
         }
+
+        public override void Dispose()
+        {
+            EventManager.Unsubscribe<CardBlockedEvent>(OnCardBlockedEvent);
+        }
     }
 }

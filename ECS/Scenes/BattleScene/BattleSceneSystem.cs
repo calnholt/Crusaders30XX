@@ -91,6 +91,7 @@ namespace Crusaders30XX.ECS.Systems
 		private EnemyAttackProgressManagementSystem _enemyAttackProgressManagementSystem;
 		private MarkedForSpecificDiscardSystem _markedForSpecificDiscardSystem;
 		private MarkedForEndOfTurnSystem _markedForEndOfTurnSystem;
+		private MarkedForExhaustSystem _markedForExhaustSystem;
 		private StunnedOverlaySystem _stunnedOverlaySystem;
 		private AttackResolutionSystem _attackResolutionSystem;
 		private HandBlockInteractionSystem _handBlockInteractionSystem;
@@ -761,6 +762,7 @@ namespace Crusaders30XX.ECS.Systems
 			_enemyAttackProgressManagementSystem = new EnemyAttackProgressManagementSystem(_world.EntityManager);
 			_markedForSpecificDiscardSystem = new MarkedForSpecificDiscardSystem(_world.EntityManager);
 			_markedForEndOfTurnSystem = new MarkedForEndOfTurnSystem(_world.EntityManager);
+			_markedForExhaustSystem = new MarkedForExhaustSystem(_world.EntityManager);
 			_stunnedOverlaySystem = new StunnedOverlaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_attackResolutionSystem = new AttackResolutionSystem(_world.EntityManager);
 			_handBlockInteractionSystem = new HandBlockInteractionSystem(_world.EntityManager);
@@ -881,6 +883,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_enemyAttackProgressManagementSystem);
 			_world.AddSystem(_markedForSpecificDiscardSystem);
 			_world.AddSystem(_markedForEndOfTurnSystem);
+			_world.AddSystem(_markedForExhaustSystem);
 			_world.AddSystem(_stunnedOverlaySystem);
 			_world.AddSystem(_attackResolutionSystem);
 			_world.AddSystem(_enemyAttackDisplaySystem);

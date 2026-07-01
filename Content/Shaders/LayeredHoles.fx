@@ -39,8 +39,8 @@ sampler2D TextureSampler : register(s0) = sampler_state
     AddressV = Clamp;
 };
 
-texture MiddleTexture;
-sampler2D MiddleTextureSampler = sampler_state
+texture MiddleTexture : register(t1);
+sampler2D MiddleTextureSampler : register(s1) = sampler_state
 {
     Texture = <MiddleTexture>;
     MinFilter = Linear;
@@ -50,8 +50,8 @@ sampler2D MiddleTextureSampler = sampler_state
     AddressV = Clamp;
 };
 
-texture BottomTexture;
-sampler2D BottomTextureSampler = sampler_state
+texture BottomTexture : register(t2);
+sampler2D BottomTextureSampler : register(s2) = sampler_state
 {
     Texture = <BottomTexture>;
     MinFilter = Linear;
