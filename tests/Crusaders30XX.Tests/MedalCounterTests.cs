@@ -3,6 +3,8 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Factories;
+using Crusaders30XX.ECS.Objects.Cards;
 using Crusaders30XX.ECS.Objects.Medals;
 using Crusaders30XX.ECS.Services;
 using Xunit;
@@ -290,6 +292,171 @@ public class MedalCounterTests
 				Delta = 2
 			});
 			Assert.Equal(2, activateCount);
+		}
+		finally
+		{
+			EventManager.Clear();
+		}
+	}
+
+	[Fact]
+	public void MedalFactory_includes_st_rita_and_st_longinus()
+	{
+		Assert.IsType<StRita>(MedalFactory.Create("st_rita"));
+		Assert.IsType<StLonginus>(MedalFactory.Create("st_longinus"));
+		Assert.Contains("st_rita", MedalFactory.GetAllMedals().Keys);
+		Assert.Contains("st_longinus", MedalFactory.GetAllMedals().Keys);
+	}
+
+	[Fact]
+	public void StRita_emits_activate_on_curse_play()
+	{
+		EventManager.Clear();
+		try
+		{
+			var entityManager = new EntityManager();
+			var medal = new StRita();
+			medal.Initialize(entityManager, entityManager.CreateEntity("Medal"));
+
+			var activateCount = 0;
+			EventManager.Subscribe<MedalActivateEvent>(_ => activateCount++);
+
+			var curseCard = entityManager.CreateEntity("CurseCard");
+			entityManager.AddComponent(curseCard, new CardData { Card = new Curse() });
+
+			EventManager.Publish(new CardPlayedEvent { Card = curseCard });
+
+			Assert.Equal(1, activateCount);
+		}
+		finally
+		{
+			EventManager.Clear();
+		}
+	}
+
+	[Fact]
+	public void StRita_does_not_trigger_on_non_curse_play()
+	{
+		EventManager.Clear();
+		try
+		{
+			var entityManager = new EntityManager();
+			var medal = new StRita();
+			medal.Initialize(entityManager, entityManager.CreateEntity("Medal"));
+
+			var activateCount = 0;
+			EventManager.Subscribe<MedalActivateEvent>(_ => activateCount++);
+
+			var strikeCard = entityManager.CreateEntity("StrikeCard");
+			entityManager.AddComponent(strikeCard, new CardData { Card = CardFactory.Create("strike") });
+
+			EventManager.Publish(new CardPlayedEvent { Card = strikeCard });
+
+			Assert.Equal(0, activateCount);
+		}
+		finally
+		{
+			EventManager.Clear();
+		}
+	}
+
+	[Fact]
+	public void StRita_activate_publishes_resurrect_2()
+	{
+		EventManager.Clear();
+		try
+		{
+			var entityManager = new EntityManager();
+			var medal = new StRita();
+			medal.Initialize(entityManager, entityManager.CreateEntity("Medal"));
+
+			DrawRandomCardFromDiscardEvent resurrectEvent = null;
+			EventManager.Subscribe<DrawRandomCardFromDiscardEvent>(evt => resurrectEvent = evt);
+
+			medal.Activate();
+
+			Assert.NotNull(resurrectEvent);
+			Assert.Equal(2, resurrectEvent.Amount);
+		}
+		finally
+		{
+			EventManager.Clear();
+		}
+	}
+
+	[Fact]
+	public void StLonginus_emits_activate_on_thorned_pledge()
+	{
+		EventManager.Clear();
+		try
+		{
+			var entityManager = new EntityManager();
+			var medal = new StLonginus();
+			medal.Initialize(entityManager, entityManager.CreateEntity("Medal"));
+
+			var activateCount = 0;
+			EventManager.Subscribe<MedalActivateEvent>(_ => activateCount++);
+
+			var thornedCard = entityManager.CreateEntity("ThornedCard");
+			entityManager.AddComponent(thornedCard, new Thorned { Owner = thornedCard });
+
+			EventManager.Publish(new PledgeAddedEvent { Card = thornedCard });
+
+			Assert.Equal(1, activateCount);
+		}
+		finally
+		{
+			EventManager.Clear();
+		}
+	}
+
+	[Fact]
+	public void StLonginus_does_not_trigger_on_normal_pledge()
+	{
+		EventManager.Clear();
+		try
+		{
+			var entityManager = new EntityManager();
+			var medal = new StLonginus();
+			medal.Initialize(entityManager, entityManager.CreateEntity("Medal"));
+
+			var activateCount = 0;
+			EventManager.Subscribe<MedalActivateEvent>(_ => activateCount++);
+
+			var normalCard = entityManager.CreateEntity("NormalCard");
+
+			EventManager.Publish(new PledgeAddedEvent { Card = normalCard });
+
+			Assert.Equal(0, activateCount);
+		}
+		finally
+		{
+			EventManager.Clear();
+		}
+	}
+
+	[Fact]
+	public void StLonginus_activate_requests_kunai_to_hand()
+	{
+		EventManager.Clear();
+		try
+		{
+			var entityManager = new EntityManager();
+			var deckEntity = entityManager.CreateEntity("Deck");
+			entityManager.AddComponent(deckEntity, new Deck());
+
+			var medal = new StLonginus();
+			medal.Initialize(entityManager, entityManager.CreateEntity("Medal"));
+
+			CardMoveRequested moveRequest = null;
+			EventManager.Subscribe<CardMoveRequested>(evt => moveRequest = evt);
+
+			medal.Activate();
+
+			Assert.NotNull(moveRequest);
+			Assert.Equal(CardZoneType.Hand, moveRequest.Destination);
+			Assert.Equal("kunai", moveRequest.Card?.GetComponent<CardData>()?.Card?.CardId);
+			Assert.Equal("st_longinus", moveRequest.Reason);
 		}
 		finally
 		{

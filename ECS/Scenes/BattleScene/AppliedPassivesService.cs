@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
@@ -50,9 +51,11 @@ namespace Crusaders30XX.ECS.Systems
           return 0;
         }
         var delta = 0;
-        var isEnemy = e.Source.HasComponent<Enemy>();
-        var sourcePassives = e.Source.GetComponent<AppliedPassives>().Passives;
-        var targetPassives = e.Target.GetComponent<AppliedPassives>().Passives;
+        var isEnemy = e.Source?.HasComponent<Enemy>() == true;
+        var sourcePassives = e.Source?.GetComponent<AppliedPassives>()?.Passives
+          ?? new Dictionary<AppliedPassiveType, int>();
+        var targetPassives = e.Target?.GetComponent<AppliedPassives>()?.Passives
+          ?? new Dictionary<AppliedPassiveType, int>();
         if (targetPassives.ContainsKey(AppliedPassiveType.Armor) && e.DamageType == ModifyTypeEnum.Attack)
         {
           targetPassives.TryGetValue(AppliedPassiveType.Armor, out var amount);

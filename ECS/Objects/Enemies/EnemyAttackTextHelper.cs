@@ -44,9 +44,9 @@ public static class EnemyAttackTextHelper
         case EnemyAttackTextType.Intimidate:
           return $"Intimidates {amount} card{(amount > 1 ? "s" : "")} from your hand (can't block with intimidated cards for the rest of the turn).";
         case EnemyAttackTextType.MustBeBlockedByAtLeast:
-          return $"This attack must be blocked with at least {amount} card{(amount > 1 ? "s" : "")}/equipment if possible.";
+          return $"This attack must be blocked with at least {amount} card{(amount > 1 ? "s" : "")}/equipment.";
         case EnemyAttackTextType.MustBeBlockedExactly:
-          return $"This attack must be blocked with exactly {amount} card{(amount > 1 ? "s" : "")}/equipment if possible.";
+          return $"This attack must be blocked with exactly {amount} card{(amount > 1 ? "s" : "")}/equipment.";
         case EnemyAttackTextType.Burn:
           return $"Gain {amount} burn.";
         case EnemyAttackTextType.Scar:

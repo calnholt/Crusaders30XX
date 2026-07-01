@@ -82,9 +82,32 @@ namespace Crusaders30XX.ECS.Systems
             var plannedAttack = intent?.Planned?.FirstOrDefault();
             mustBeBlockedContextId = plannedAttack?.ContextId;
             mustBeBlockedAttackDefinition = plannedAttack?.AttackDefinition;
+            if (mustBeBlockedAttackDefinition == null
+                || !EnemyAttackMustBlockRequirementService.TryGetRequirement(
+                    mustBeBlockedAttackDefinition.ConditionType,
+                    out var activeRequirement)
+                || activeRequirement.Threshold != evt.Threshold
+                || !RequirementTypesMatch(activeRequirement.Type, evt.Type))
+            {
+                ResetBlockRequirement();
+                return;
+            }
+
             mustBeBlockedThreshold = evt.Threshold;
             requirementType = evt.Type;
             LoggingService.Append("MustBeBlockedSystem.InitializeBlockRequirement", new System.Text.Json.Nodes.JsonObject { ["contextId"] = mustBeBlockedContextId, ["attackName"] = mustBeBlockedAttackDefinition?.Name, ["threshold"] = mustBeBlockedThreshold, ["requirementType"] = requirementType.ToString() });
+        }
+
+        private static bool RequirementTypesMatch(
+            EnemyAttackMustBlockRequirementService.RequirementType activeRequirementType,
+            MustBeBlockedByType eventRequirementType)
+        {
+            return activeRequirementType switch
+            {
+                EnemyAttackMustBlockRequirementService.RequirementType.AtLeast => eventRequirementType == MustBeBlockedByType.AtLeast,
+                EnemyAttackMustBlockRequirementService.RequirementType.Exactly => eventRequirementType == MustBeBlockedByType.Exactly,
+                _ => false
+            };
         }
 
         private List<Entity> GetEligibleBlockCards(Deck deck)

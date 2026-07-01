@@ -29,9 +29,12 @@ namespace Crusaders30XX.ECS.Factories
                 "st_clare" => new StClare(),
                 "st_joan_of_arc" => new StJoanOfArc(),
                 "st_jerome" => new StJerome(),
+                "st_longinus" => new StLonginus(),
                 "st_benedict" => new StBenedict(),
                 "st_simon_of_cyrene" => new StSimonOfCyrene(),
                 "st_augustine" => new StAugustine(),
+                "st_olaf" => new StOlaf(),
+                "st_rita" => new StRita(),
                 _ => null
             };
         }
@@ -56,11 +59,13 @@ namespace Crusaders30XX.ECS.Factories
                 { "st_clare", new StClare() },
                 { "st_joan_of_arc", new StJoanOfArc() },
                 { "st_jerome", new StJerome() },
+                { "st_longinus", new StLonginus() },
                 { "st_benedict", new StBenedict() },
                 { "st_simon_of_cyrene", new StSimonOfCyrene() },
                 { "st_augustine", new StAugustine() },
+                { "st_olaf", new StOlaf() },
+                { "st_rita", new StRita() },
             };
         }
     }
 }
-

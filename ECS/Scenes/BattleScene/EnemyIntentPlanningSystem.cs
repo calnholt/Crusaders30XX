@@ -126,6 +126,7 @@ namespace Crusaders30XX.ECS.Systems
 				var intent = EntityManager.GetEntity("Enemy").GetComponent<AttackIntent>();
 				var planned = intent.Planned.FirstOrDefault();
 				if (planned == null) return;
+				EnemyAttackMustBlockRequirementService.NormalizeIfImpossible(EntityManager, planned);
 				if (planned.AttackDefinition.OnAttackReveal != null)
 				{
 					planned.AttackDefinition.OnAttackReveal(EntityManager);

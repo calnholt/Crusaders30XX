@@ -328,11 +328,9 @@ namespace Crusaders30XX.ECS.Systems
             switch (e.Type)
             {
                 case AppliedPassiveType.Frostbite:
-                    if (next >= TooltipTextService.FrostbiteThreshold)
+                    if (e.Delta > 0 && next >= TooltipTextService.FrostbiteThreshold)
                     {
-                        EventManager.Publish(new FrostbiteTriggered { Target = e.Target });
-                        EventManager.Publish(new ModifyHpRequestEvent { Source = e.Target, Target = e.Target, Delta = -TooltipTextService.FrostbiteDamage, DamageType = ModifyTypeEnum.Effect });
-                        EventManager.Publish(new UpdatePassive { Owner = e.Target, Type = AppliedPassiveType.Frostbite, Delta = -TooltipTextService.FrostbiteDamage });
+                        ResolveFrostbiteThresholds(e.Target, ap, next);
                     }
                     break;
                 default:
@@ -342,6 +340,59 @@ namespace Crusaders30XX.ECS.Systems
             if (e.Target.HasComponent<Player>() && GetRunLongPassives().Contains(e.Type))
             {
                 RunScopedStateService.SyncRunLongPassivesFromPlayer(e.Target);
+            }
+        }
+
+        private void ResolveFrostbiteThresholds(Entity target, AppliedPassives passives, int totalStacks)
+        {
+            int threshold = TooltipTextService.FrostbiteThreshold;
+            if (target == null || passives?.Passives == null || threshold <= 0) return;
+
+            int triggerCount = totalStacks / threshold;
+            if (triggerCount <= 0) return;
+
+            int remainingStacks = totalStacks % threshold;
+            if (remainingStacks > 0)
+            {
+                passives.Passives[AppliedPassiveType.Frostbite] = remainingStacks;
+            }
+            else
+            {
+                passives.Passives.Remove(AppliedPassiveType.Frostbite);
+            }
+
+            for (int i = 0; i < triggerCount; i++)
+            {
+                EventManager.Publish(new FrostbiteTriggered
+                {
+                    Target = target,
+                    DamageAmount = TooltipTextService.FrostbiteDamage,
+                    TriggerIndex = i + 1,
+                    TriggerCount = triggerCount
+                });
+
+                var request = new ReplaceableEffectRequest
+                {
+                    Kind = ReplaceableEffectKind.FrostbiteThresholdDamage,
+                    OriginalSource = target,
+                    OriginalTarget = target,
+                    OriginalDelta = -TooltipTextService.FrostbiteDamage,
+                    DamageType = ModifyTypeEnum.Effect,
+                    PassiveType = AppliedPassiveType.Frostbite.ToString()
+                };
+
+                EventManager.Publish(request);
+
+                if (!request.IsHandled)
+                {
+                    EventManager.Publish(new ModifyHpRequestEvent
+                    {
+                        Source = target,
+                        Target = target,
+                        Delta = -TooltipTextService.FrostbiteDamage,
+                        DamageType = ModifyTypeEnum.Effect
+                    });
+                }
             }
         }
 
@@ -511,4 +562,3 @@ namespace Crusaders30XX.ECS.Systems
         }
     }
 }
-

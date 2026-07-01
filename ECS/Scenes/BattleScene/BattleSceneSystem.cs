@@ -118,6 +118,7 @@ namespace Crusaders30XX.ECS.Systems
 		private EquipmentTooltipDisplaySystem _equipmentTooltipDisplaySystem;
 		private HighlightSettingsSystem _equipmentHighlightSettingsDebugSystem;
 		private EquipmentBlockInteractionSystem _equipmentBlockInteractionSystem;
+		private ReplacementEffectSystem _replacementEffectSystem;
 		private AppliedPassivesManagementSystem _appliedPassivesManagementSystem;
 		private AnathemaManagementSystem _anathemaManagementSystem;
 		private BrittleManagementSystem _brittleManagementSystem;
@@ -786,6 +787,7 @@ namespace Crusaders30XX.ECS.Systems
 			_questTribulationDisplaySystem = new QuestTribulationDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_equipmentHighlightSettingsDebugSystem = new HighlightSettingsSystem(_world.EntityManager);
 			_equipmentBlockInteractionSystem = new EquipmentBlockInteractionSystem(_world.EntityManager);
+			_replacementEffectSystem = new ReplacementEffectSystem(_world.EntityManager);
 			_appliedPassivesManagementSystem = new AppliedPassivesManagementSystem(_world.EntityManager);
 			_anathemaManagementSystem = new AnathemaManagementSystem(_world.EntityManager);
 			_brittleManagementSystem = new BrittleManagementSystem(_world.EntityManager);
@@ -918,6 +920,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_questTribulationDisplaySystem);
 			_world.AddSystem(_equipmentHighlightSettingsDebugSystem);
 			_world.AddSystem(_equipmentBlockInteractionSystem);
+			_world.AddSystem(_replacementEffectSystem);
 			_world.AddSystem(_appliedPassivesManagementSystem);
 			_world.AddSystem(_anathemaManagementSystem);
 			_world.AddSystem(_brittleManagementSystem);

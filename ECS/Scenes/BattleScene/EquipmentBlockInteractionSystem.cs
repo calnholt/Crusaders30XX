@@ -2,6 +2,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Objects.EnemyAttacks;
 using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using System;
@@ -48,7 +49,8 @@ namespace Crusaders30XX.ECS.Systems
 			if (!isBlockPhase && !isActionPhase) return;
 			// Need current context during Block phase
 			var enemy = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
-			var ctx = enemy?.GetComponent<AttackIntent>()?.Planned?.FirstOrDefault()?.ContextId;
+			var plannedAttack = enemy?.GetComponent<AttackIntent>()?.Planned?.FirstOrDefault();
+			var ctx = plannedAttack?.ContextId;
 			// Clicks now come from UIElement.IsClicked on equipment UI elements
 
 			// Iterate equipment visible in panel (Default zone), topmost first (Z desc just in case)
@@ -97,6 +99,16 @@ namespace Crusaders30XX.ECS.Systems
 					if (blockVal <= 0)
 					{
 						PublishInvalidClick("This equipment cannot block!");
+						break;
+					}
+					if (!EnemyBlockerEligibilityService.IsEligibleEquipmentBlocker(EntityManager, eqEntity, plannedAttack))
+					{
+						var restriction = plannedAttack?.AttackDefinition?.BlockingRestrictionType ?? BlockingRestrictionType.None;
+						var message = restriction == BlockingRestrictionType.None
+							? "This equipment cannot block this attack!"
+							: EnemyAttackTextHelper.GetBlockingRestrictionText(restriction);
+						if (message.EndsWith(".")) message = message.Substring(0, message.Length - 1) + "!";
+						PublishInvalidClick(message);
 						break;
 					}
 
