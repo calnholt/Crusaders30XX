@@ -13,7 +13,7 @@ namespace Crusaders30XX.ECS.Objects.Medals
         {
             Id = MedalId;
             Name = "St. Lawrence";
-            Text = "Your scorched cards deal +X damage, where X is the number of cards discarded to play it +1.";
+            Text = "Your scorched cards deal +X damage, where X is the number of cards discarded to play it.";
         }
 
         public override void Initialize(EntityManager entityManager, Entity medalEntity)
@@ -31,7 +31,7 @@ namespace Crusaders30XX.ECS.Objects.Medals
             int paymentCount = query.PaymentCards?.Count ?? 0;
             yield return new CardStatModifier
             {
-                Delta = paymentCount + 1,
+                Delta = paymentCount,
                 Reason = Id,
                 SourceId = Id,
                 SourceType = "Medal",
